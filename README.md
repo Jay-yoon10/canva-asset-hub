@@ -32,7 +32,7 @@ Large marketing teams manage thousands of approved brand assets in AWS S3. Previ
 | Observability | Amazon CloudWatch (structured JSON logging) |
 
 ## Project Structure
-
+```
 canva-asset-hub/
 ├── lambda/
 │   └── upload_handler/
@@ -41,7 +41,7 @@ canva-asset-hub/
 │   └── architecture.png         # Architecture diagram
 ├── .env.example                 # Environment variable template
 └── README.md
-
+```
 ## Setup Guide
 
 ### Prerequisites
