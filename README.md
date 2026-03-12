@@ -8,6 +8,10 @@ Large marketing teams manage thousands of approved brand assets in AWS S3. Previ
 
 **Canva Asset Hub** eliminates that entirely. When an image is uploaded to S3, an event-driven pipeline automatically syncs it to Canva — no human intervention required.
 
+## Website
+
+![Website Link](https://jay-yoon10.github.io/canva-asset-hub/)
+
 ## Architecture
 
 ![Architecture Diagram](assets/phase1-architecture-diagram.png)
