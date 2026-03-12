@@ -10,7 +10,7 @@ Large marketing teams manage thousands of approved brand assets in AWS S3. Previ
 
 ## Architecture
 
-![Architecture Diagram](docs/phase1-architecture-diagram.png)
+![Architecture Diagram](assets/phase1-architecture-diagram.png)
 
 ### How it works (Phase 1)
 
@@ -110,7 +110,7 @@ All logs use a consistent `{"level": "INFO/WARN/ERROR", "message": "...", ...}` 
 ## Observability
 CloudWatch Logs successful uploads
 
-![CloudWatch Log - Upload](docs/CloudWatch-log.png)
+![CloudWatch Log - Upload](assets/CloudWatch-log.png)
 
 CloudWatch Logs Insights query for successful uploads:
 
@@ -118,7 +118,7 @@ fields @timestamp, level, message, asset_id, file_name
 | filter message = "Upload successful"
 | sort @timestamp desc
 
-![CloudWatch Log Insight Query](docs/:aws:lambda:canva-asset-upload-handler-INFO.png)
+![CloudWatch Log Insight Query](assets/:aws:lambda:canva-asset-upload-handler-INFO.png)
 
 ## Roadmap
 
