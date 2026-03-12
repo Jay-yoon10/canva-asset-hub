@@ -10,7 +10,7 @@ Large marketing teams manage thousands of approved brand assets in AWS S3. Previ
 
 ## Website
 
-![Website Link](https://jay-yoon10.github.io/canva-asset-hub/)
+[Website Link](https://jay-yoon10.github.io/canva-asset-hub/)
 
 ## Architecture
 
