@@ -108,6 +108,9 @@ Canva's Asset Upload API is asynchronous by design — it returns a job ID immed
 All logs use a consistent `{"level": "INFO/WARN/ERROR", "message": "...", ...}` format, enabling CloudWatch Logs Insights queries like `filter level = "ERROR"` for fast incident detection.
 
 ## Observability
+CloudWatch Logs successful uploads
+
+![CloudWatch Log - Upload](docs/CloudWatch-log.png)
 
 CloudWatch Logs Insights query for successful uploads:
 
