@@ -61,8 +61,8 @@ aws s3api put-bucket-notification-configuration \
 ```
 
 ### 2. Lambda Function
-- Runtime: Python 3.12
-- Timeout: 60 seconds
+- Runtime: Python 3.14
+- Timeout: 60+ seconds
 - Memory: 256 MB
 - IAM role: `AmazonS3ReadOnlyAccess` + `CloudWatchLogsFullAccess`
 
