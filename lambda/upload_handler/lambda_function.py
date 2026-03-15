@@ -6,6 +6,7 @@ import urllib.parse
 import urllib.request
 import urllib.error
 import base64
+from datetime import datetime, timezone
 
 
 def log(level: str, message: str, **kwargs):
@@ -16,8 +17,11 @@ def log(level: str, message: str, **kwargs):
 
 CANVA_ACCESS_TOKEN = os.environ.get("CANVA_ACCESS_TOKEN", "")
 CANVA_API_BASE = os.environ.get("CANVA_API_BASE", "https://api.canva.com/rest/v1")
+DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE", "canva-asset-hub-assets")
 
 s3_client = boto3.client("s3")
+dynamodb = boto3.resource("dynamodb", region_name="ap-southeast-2")
+table = dynamodb.Table(DYNAMODB_TABLE)
 
 MAX_SIZE_BYTES = 25 * 1024 * 1024  # 25MB
 MIME_MAP = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg"}
@@ -43,7 +47,7 @@ def lambda_handler(event, context):
         log("WARN", "Skipping empty file", key=key)
         return {"statusCode": 200, "body": "Skipped — empty file"}
 
-    # Skip files exceeding Canva's size limit
+    # Skip files exceeding size limit
     if object_size > MAX_SIZE_BYTES:
         log("WARN", "Skipping file too large", key=key, size=object_size)
         return {"statusCode": 200, "body": "Skipped — file too large"}
@@ -74,10 +78,48 @@ def lambda_handler(event, context):
 
     if asset_id:
         log("INFO", "Upload successful", asset_id=asset_id, file_name=file_name)
+        # Save metadata to DynamoDB
+        save_to_dynamodb(
+            asset_id=asset_id,
+            s3_bucket=bucket,
+            s3_key=key,
+            file_name=file_name,
+            file_size=object_size,
+            mime_type=mime_type,
+        )
         return {"statusCode": 200, "body": json.dumps({"asset_id": asset_id})}
     else:
         log("ERROR", "Upload failed after 3 attempts", file_name=file_name)
         return {"statusCode": 500, "body": "Canva upload failed"}
+
+
+def save_to_dynamodb(
+    asset_id: str,
+    s3_bucket: str,
+    s3_key: str,
+    file_name: str,
+    file_size: int,
+    mime_type: str,
+) -> None:
+    """Save asset metadata to DynamoDB after successful Canva upload"""
+    uploaded_at = datetime.now(timezone.utc).isoformat()
+    item = {
+        "asset_id": asset_id,           # Partition key — Canva Asset ID
+        "uploaded_at": uploaded_at,     # Sort key — ISO 8601 UTC timestamp
+        "s3_bucket": s3_bucket,
+        "s3_key": s3_key,
+        "file_name": file_name,
+        "file_size": file_size,
+        "mime_type": mime_type,
+        "status": "COMPLETE",
+        "sync_direction": "s3_to_canva",
+    }
+    try:
+        table.put_item(Item=item)
+        log("INFO", "Saved to DynamoDB", asset_id=asset_id, s3_key=s3_key)
+    except Exception as e:
+        # Log error but don't fail the Lambda — upload already succeeded
+        log("ERROR", "Failed to save to DynamoDB", asset_id=asset_id, error=str(e))
 
 
 def upload_to_canva(file_data: bytes, file_name: str, mime_type: str) -> str | None:
