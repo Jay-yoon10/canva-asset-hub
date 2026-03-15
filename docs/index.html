@@ -20,7 +20,8 @@
     <li><a href="#api-reference">API Reference</a></li>
     <li><a href="#demo">Demo</a></li>
   </ul>
-  <a class="nav-cta" href="https://github.com/Jay-yoon10/canva-asset-hub" target="_blank">GitHub ↗</a>
+  <a class="nav-cta" href="https://jay-yoon10.github.io/canva-asset-hub-dashboard/" target="_blank" style="margin-right:0.5rem;background:linear-gradient(135deg,var(--purple),var(--pink));">Dashboard ↗</a>
+<a class="nav-cta" href="https://github.com/Jay-yoon10/canva-asset-hub" target="_blank" style="background:var(--text);">GitHub ↗</a>
 </nav>
 
 <!-- HERO -->
@@ -135,20 +136,57 @@
           <div class="flow-node"><div class="flow-chip fc-cw">CloudWatch</div><div class="flow-chip-label">Observability</div></div>
         </div>
       </div>
-
       <div class="flow-phase" id="fp2">
-        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:3rem 2rem; gap:1rem; text-align:center;">
-          <div style="width:52px;height:52px;border-radius:14px;background:var(--purple-light);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🚧</div>
-          <div style="font-size:1.05rem;font-weight:800;color:var(--text);">Phase 2 — In Development</div>
-          <p style="font-size:0.875rem;color:var(--text-mid);max-width:400px;line-height:1.7;">Bedrock AI tagging, reverse sync via Canva Webhooks, DynamoDB metadata layer, and a React dashboard with Cognito auth are currently being built.</p>
-          <div style="display:flex;gap:0.625rem;flex-wrap:wrap;justify-content:center;margin-top:0.25rem;">
-            <span style="font-size:0.72rem;font-weight:700;padding:0.3rem 0.75rem;border-radius:100px;background:var(--teal-light);color:var(--teal);">🤖 Bedrock AI Tagging</span>
-            <span style="font-size:0.72rem;font-weight:700;padding:0.3rem 0.75rem;border-radius:100px;background:var(--orange-light);color:var(--orange);">🔄 Reverse Sync</span>
-            <span style="font-size:0.72rem;font-weight:700;padding:0.3rem 0.75rem;border-radius:100px;background:#E8F4FD;color:#1565C0;">🗄 DynamoDB</span>
-            <span style="font-size:0.72rem;font-weight:700;padding:0.3rem 0.75rem;border-radius:100px;background:var(--purple-light);color:var(--purple);">🔐 Auth &amp; Dashboard</span>
+        <div class="flow-section-lbl">Forward: S3 → Bedrock → Lambda → Canva · Reverse: Canva → API Gateway → S3</div>
+        <div style="display:flex;flex-direction:column;gap:2rem;">
+          <!-- Forward sync -->
+          <div>
+            <div style="font-size:0.68rem;font-weight:700;color:var(--teal);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Forward Sync — S3 → Canva</div>
+            <div class="flow-row">
+              <div class="flow-node"><div class="flow-chip fc-s3">S3 Bucket</div><div class="flow-chip-label">Asset store</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">PutObject</div></div>
+              <div class="flow-node"><div class="flow-chip fc-eb">EventBridge</div><div class="flow-chip-label">Event rule</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">invoke</div></div>
+              <div class="flow-node"><div class="flow-chip fc-ai">Bedrock</div><div class="flow-chip-label">AI tagging</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">tags</div></div>
+              <div class="flow-node"><div class="flow-chip fc-lm">Lambda</div><div class="flow-chip-label">Upload handler</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">HTTP POST</div></div>
+              <div class="flow-node"><div class="flow-chip fc-cv">Canva API</div><div class="flow-chip-label">Upload + poll</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">store</div></div>
+              <div class="flow-node"><div class="flow-chip fc-db">DynamoDB</div><div class="flow-chip-label">Metadata</div></div>
+            </div>
+          </div>
+          <!-- Reverse sync -->
+          <div>
+            <div style="font-size:0.68rem;font-weight:700;color:var(--pink);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Reverse Sync — Canva → S3</div>
+            <div class="flow-row">
+              <div class="flow-node"><div class="flow-chip fc-ui">React Dashboard</div><div class="flow-chip-label">Export trigger</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">POST</div></div>
+              <div class="flow-node"><div class="flow-chip fc-gw">API Gateway</div><div class="flow-chip-label">JWT auth</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">invoke</div></div>
+              <div class="flow-node"><div class="flow-chip fc-lm">Lambda</div><div class="flow-chip-label">Export handler</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">export</div></div>
+              <div class="flow-node"><div class="flow-chip fc-cv">Canva API</div><div class="flow-chip-label">Design export</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">save</div></div>
+              <div class="flow-node"><div class="flow-chip fc-s3">S3 Bucket</div><div class="flow-chip-label">canva-exports/</div></div>
+            </div>
+          </div>
+          <!-- Auth layer -->
+          <div>
+            <div style="font-size:0.68rem;font-weight:700;color:var(--purple);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Auth Layer</div>
+            <div class="flow-row">
+              <div class="flow-node"><div class="flow-chip fc-ui">React (Vite)</div><div class="flow-chip-label">Dashboard UI</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">PKCE</div></div>
+              <div class="flow-node"><div class="flow-chip fc-cg">Cognito</div><div class="flow-chip-label">User Pool</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">JWT</div></div>
+              <div class="flow-node"><div class="flow-chip fc-gw">API Gateway</div><div class="flow-chip-label">Authorizer</div></div>
+              <div class="flow-arr"><div class="flow-arr-line">→</div><div class="flow-arr-lbl">logs</div></div>
+              <div class="flow-node"><div class="flow-chip fc-cw">CloudWatch</div><div class="flow-chip-label">Observability</div></div>
+            </div>
           </div>
         </div>
       </div>
+      
     </div>
 
     <div class="detail-cards" id="dc-p1">
@@ -264,7 +302,7 @@
       <!-- PHASE 2 -->
       <div class="api-group">
         <div class="api-group-title">
-          🔷 Phase 2 — Planned · Backend REST API (API Gateway + Lambda)
+          ✅ Phase 2 — Implemented · Backend REST API (API Gateway + Lambda)
         </div>
   
         <div class="endpoint" onclick="toggleEp(this)">
@@ -355,7 +393,8 @@
       <!-- PHASE 2 BEDROCK -->
       <div class="api-group">
         <div class="api-group-title">
-          🔷 Phase 2 — Planned · Amazon Bedrock (AI Tagging)
+          <!-- 🔷 Phase 2 — Planned · Amazon Bedrock (AI Tagging) -->
+          ✅ Phase 2 — Implemented · Amazon Bedrock (AI Tagging — Claude Haiku 4.5)
         </div>
   
         <div class="endpoint" onclick="toggleEp(this)">
