@@ -29,6 +29,8 @@ Phase 1 Architecture
 S3 Upload → EventBridge → Lambda → Canva Connect API → CloudWatch
 ```
 
+### How it works (Phase1):
+
 1. A brand asset (PNG/JPG) is uploaded to the S3 bucket
 2. S3 emits an `Object Created` event to Amazon EventBridge
 3. EventBridge rule triggers the Lambda function
@@ -45,7 +47,20 @@ Forward:  S3 → EventBridge → Lambda → Bedrock (AI tagging) → Canva API �
 Reverse:  React Dashboard → API Gateway (JWT) → Lambda → Canva Export → S3
 Auth:     React → Amplify (PKCE) → Cognito → JWT → API Gateway
 ```
+### How it works (Forward Sync):
+1. A brand asset is uploaded to S3
+2. EventBridge triggers the Lambda upload handler
+3. Lambda calls Amazon Bedrock (Claude Haiku 4.5) to generate AI tags — `brand_tier`, `campaign_type`, `approved_for`
+4. Lambda uploads the asset to Canva via Connect API and polls until confirmed
+5. Asset metadata + AI tags are stored in DynamoDB
 
+### How it works (Reverse Sync):
+1. User logs into the React dashboard via Cognito (PKCE)
+2. User enters a Canva Design ID and clicks "Export to S3"
+3. React calls `POST /export/canva` on API Gateway with JWT token
+4. Lambda calls Canva Export API and polls until the design is ready
+5. Exported design is saved to S3 under `canva-exports/`
+6. DynamoDB records the reverse sync entry
 ---
 
 ## Tech Stack
@@ -107,7 +122,7 @@ aws s3api put-bucket-notification-configuration \
 
 ### 2. Lambda — Upload Handler (`canva-asset-upload-handler`)
 
-- Runtime: Python 3.12
+- Runtime: Python 3.14
 - Timeout: 120 seconds
 - Memory: 256 MB
 - IAM: `AmazonS3ReadOnlyAccess` + `AmazonDynamoDBFullAccess` + `AmazonBedrockFullAccess` + `CloudWatchLogsFullAccess`
@@ -223,7 +238,7 @@ All logs use `{"level": "INFO/WARN/ERROR", "message": "..."}` format, enabling C
 
 CloudWatch structured logs — successful upload:
 
-CloudWatch Log
+![CloudWatch Log - Upload](assets/CloudWatch-log.png)
 
 CloudWatch Logs Insights query:
 
@@ -233,7 +248,7 @@ fields @timestamp, level, message, asset_id, file_name
 | sort @timestamp desc
 ```
 
-CloudWatch Insights
+![CloudWatch Log Insight Query](assets/:aws:lambda:canva-asset-upload-handler-INFO.png)
 
 ---
 
